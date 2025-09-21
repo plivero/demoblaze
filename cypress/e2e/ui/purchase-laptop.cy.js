@@ -1,11 +1,14 @@
 // cypress/e2e/purchase-laptop.cy.js
-import { loginSession } from "../support/helpers/session";
-import { getUserName } from "../support/helpers/env";
-import { orderData } from "../support/helpers/orderData";
-import { addSameProductNTimes } from "../support/helpers/cartActions";
-import HomePage from "../support/pages/homePage";
-import CartPage from "../support/pages/cartPage";
-import Order from "../support/pages/orderPage";
+import { loginSession } from "../../support/helpers/session";
+import { getUserName } from "../../support/helpers/env";
+import { orderData } from "../../support/helpers/orderData";
+import {
+  addSameProductNTimes,
+  addProductsByIndexes,
+} from "../../support/helpers/cartActions";
+import HomePage from "../../support/pages/homePage";
+import CartPage from "../../support/pages/cartPage";
+import Order from "../../support/pages/orderPage";
 
 describe("Purchase - Laptop", () => {
   const home = new HomePage();
@@ -21,7 +24,7 @@ describe("Purchase - Laptop", () => {
     home.getWelcomeUser().should("contain.text", `Welcome ${getUserName()}`);
 
     home.openLaptops();
-    home.openFirstLaptop();
+    home.openProductAt(0);
 
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
@@ -46,12 +49,11 @@ describe("Purchase - Laptop", () => {
     home.getLogoutButton().should("not.be.visible");
   });
 
-  it.only("adds one product and deletes it", () => {
+  it("adds one product and deletes it", () => {
     cy.visit("/");
 
     home.openLaptops();
-    home.getProductTitles().first().should("be.visible");
-    home.openFirstLaptop();
+    home.openProductAt(0);
 
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
@@ -63,12 +65,12 @@ describe("Purchase - Laptop", () => {
     cy.wait(700);
   });
 
-  it.only("buys three units of the same laptop", () => {
+  it("buys three units of the same laptop", () => {
     cy.visit("/");
 
     home.openLaptops();
-    home.getProductTitles().contains("Sony vaio i5").should("be.visible");
-    home.openFirstLaptop();
+    home.getProductByName("Sony vaio i5").should("be.visible");
+    home.openProductAt(0);
 
     addSameProductNTimes(home, 3);
 
@@ -94,48 +96,7 @@ describe("Purchase - Laptop", () => {
   it("adds all 6 laptops (first page) and completes purchase", () => {
     cy.visit("/");
 
-    home.openLaptops();
-    cy.on("window:alert", (txt) => expect(txt).to.match(/added/i));
-
-    // 1
-    home.openProductAt(0);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
-    cy.visit("/");
-    home.openLaptops();
-
-    // 2
-    home.openProductAt(1);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
-    cy.visit("/");
-    home.openLaptops();
-
-    // 3
-    home.openProductAt(2);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
-    cy.visit("/");
-    home.openLaptops();
-
-    // 4
-    home.openProductAt(3);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
-    cy.visit("/");
-    home.openLaptops();
-
-    // 5
-    home.openProductAt(4);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
-    cy.visit("/");
-    home.openLaptops();
-
-    // 6
-    home.openProductAt(5);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
+    addProductsByIndexes(home, [0, 1, 2, 3, 4, 5]);
 
     home.openCart();
 

@@ -1,16 +1,15 @@
 // cypress/e2e/prices.cy.js
 
-import HomePage from "../support/pages/homePage";
-import CartPage from "../support/pages/cartPage";
-import { asNumber, sumPriceElements } from "../support/helpers/price";
+import HomePage from "../../support/pages/homePage";
+import CartPage from "../../support/pages/cartPage";
+import { asNumber } from "../../support/helpers/price";
+import { getCartSumAndTotal } from "../../support/helpers/cartActions";
 
 const home = new HomePage();
 const cart = new CartPage();
 
 describe("Price validations on Demoblaze", () => {
   beforeEach(() => {
-    cy.clearCookies();
-    cy.clearLocalStorage();
     cy.visit("/");
   });
 
@@ -23,7 +22,7 @@ describe("Price validations on Demoblaze", () => {
       .then((price) => {
         const listPrice = asNumber(price);
 
-        home.openFirstLaptop();
+        home.openProductAt(0);
 
         home
           .getDetailPrice()
@@ -37,7 +36,7 @@ describe("Price validations on Demoblaze", () => {
 
   it("Detail price must match cart row price after adding the product", () => {
     home.openLaptops();
-    home.openFirstLaptop();
+    home.openProductAt(0);
 
     home
       .getDetailPrice()
@@ -83,19 +82,9 @@ describe("Price validations on Demoblaze", () => {
 
     cart.getItemPrices().should("have.length", 3);
 
-    cart
-      .getItemPrices()
-      .invoke("toArray")
-      .then((priceCells) => {
-        const sumOfPrices = sumPriceElements(priceCells);
-
-        cart
-          .getTotal()
-          .invoke("text")
-          .then((cartTotalPrice) => {
-            const cartTotal = asNumber(cartTotalPrice);
-            expect(cartTotal).to.eq(sumOfPrices);
-          });
-      });
+    getCartSumAndTotal(cart).then(({ count, sum, total }) => {
+      expect(count).to.eq(3);
+      expect(total).to.eq(sum);
+    });
   });
 });

@@ -39,10 +39,6 @@ export default class HomePage {
   getProductTitles() {
     return this.elements.productTitles();
   }
-  openFirstLaptop() {
-    this.elements.productTitles().filter(":visible").first().click();
-  }
-
   // product detail
   getAddToCartButton() {
     return this.elements.addToCartButton();
