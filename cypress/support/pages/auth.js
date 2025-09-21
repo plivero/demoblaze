@@ -1,27 +1,43 @@
 // cypress/support/pages/auth.js
+
 /// <reference types="cypress" />
 
-export default class AuthModal {
+export default class Auth {
   elements = {
+    openLoginButton: () => cy.get("#login2"),
     modal: () => cy.get("#logInModal"),
     usernameInput: () => cy.get("#loginusername"),
     passwordInput: () => cy.get("#loginpassword"),
-    submitButton: () => cy.get("#logInModal").contains("button", "Log in"),
+    submitButton: () => cy.get("#logInModal .btn-primary"),
+    cancelButton: () => cy.get("#logInModal .btn-secondary"),
+    closeX: () => cy.get("#logInModal .close"),
   };
 
+  open() {
+    this.elements.openLoginButton().click();
+  }
+
+  getModal() {
+    return this.elements.modal();
+  }
+
   fillUsername(username) {
-    this.elements.usernameInput().clear().type(username);
+    this.elements.usernameInput().click().clear().type(username);
   }
 
   fillPassword(password) {
-    this.elements.passwordInput().clear().type(password);
+    this.elements.passwordInput().click().clear().type(password);
   }
 
   clickSubmit() {
     this.elements.submitButton().click();
   }
 
-  getModal() {
-    return this.elements.modal();
+  clickCancel() {
+    this.elements.cancelButton().click();
+  }
+
+  clickCloseX() {
+    this.elements.closeX().click();
   }
 }
