@@ -1,9 +1,9 @@
 // cypress/e2e/login.cy.js
 
-import HomePage from "../support/pages/homePage";
-import Auth from "../support/pages/auth";
-import { getUserName } from "../support/helpers/env";
-import { loginSession } from "../support/helpers/session";
+import HomePage from "../../support/pages/homePage";
+import Auth from "../../support/pages/auth";
+import { getUserName } from "../../support/helpers/env";
+import { loginSession } from "../../support/helpers/session";
 
 describe("Login", () => {
   it("logs in with fixed user from env (via session helper)", () => {

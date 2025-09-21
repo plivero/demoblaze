@@ -1,6 +1,6 @@
 // cypress/e2e/pagination.cy.js
 
-import HomePage from "../support/pages/homePage";
+import HomePage from "../../support/pages/homePage";
 
 describe("Pagination", () => {
   const home = new HomePage();
