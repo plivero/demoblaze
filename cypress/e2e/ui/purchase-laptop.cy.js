@@ -10,11 +10,11 @@ import HomePage from "../../support/pages/homePage";
 import CartPage from "../../support/pages/cartPage";
 import Order from "../../support/pages/orderPage";
 
-describe("Purchase - Laptop", () => {
-  const home = new HomePage();
-  const cart = new CartPage();
-  const order = new Order();
+const home = new HomePage();
+const cart = new CartPage();
+const order = new Order();
 
+describe("Purchase - Laptop", () => {
   beforeEach(() => {
     loginSession();
   });

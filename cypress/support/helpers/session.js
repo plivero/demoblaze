@@ -2,14 +2,10 @@
 
 /// <reference types="cypress" />
 import HomePage from "../pages/homePage";
-import Auth from "../pages/auth";
-import { getUserName, getUserPassword } from "./env";
+import Auth from "../pages/loginPage";
 
 export function loginSession() {
-  const username = getUserName();
-  const password = getUserPassword();
-
-  cy.session(`ui-${username}`, () => {
+  cy.session(`ui-${Cypress.env("USER_NAME")}`, () => {
     const home = new HomePage();
     const auth = new Auth();
 
@@ -20,15 +16,19 @@ export function loginSession() {
 
     cy.wait(1000);
 
-    auth.fillUsername(username);
-    auth.elements.usernameInput().should("have.value", username);
+    auth.fillUsername(Cypress.env("USER_NAME"));
+    auth.elements
+      .usernameInput()
+      .should("have.value", Cypress.env("USER_NAME"));
 
-    auth.fillPassword(password);
-    auth.elements.passwordInput().should("have.value", password);
+    auth.fillPassword(Cypress.env("USER_PASSWORD"));
+    auth.elements
+      .passwordInput()
+      .should("have.value", Cypress.env("USER_PASSWORD"));
 
     auth.clickSubmit();
 
-    home.getWelcomeUser().should("contain.text", username);
+    home.getWelcomeUser().should("contain.text", Cypress.env("USER_NAME"));
     home.getLogoutButton().should("be.visible");
   });
 }

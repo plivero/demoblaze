@@ -1,6 +1,5 @@
 // cypress/support/helpers/price.js
 
-// pega só os dígitos e vira número: "$1,100 abc" -> 1100
 export const asNumber = (text) =>
   Number((String(text).match(/\d+/g) || []).join(""));
 

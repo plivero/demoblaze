@@ -1,8 +1,8 @@
-// cypress/support/pages/auth.js
+// cypress/support/pages/loginPage.js
 
 /// <reference types="cypress" />
 
-export default class Auth {
+export default class LoginPage {
   elements = {
     openLoginButton: () => cy.get("#login2"),
     modal: () => cy.get("#logInModal"),
