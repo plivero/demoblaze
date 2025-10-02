@@ -1,6 +1,4 @@
 // cypress/e2e/login.cy.js
-import { getUserName } from "../../support/helpers/env";
-import { loginSession } from "../../support/helpers/session";
 import HomePage from "../../support/pages/homePage";
 import Auth from "../../support/pages/loginPage";
 
@@ -8,10 +6,17 @@ const home = new HomePage();
 const auth = new Auth();
 
 describe("Login", () => {
-  it("logs in with fixed user from env (via session helper)", () => {
-    loginSession();
+  beforeEach(() => {
     cy.visit("/");
-    home.getWelcomeUser().should("contain.text", `Welcome ${getUserName()}`);
+  });
+
+  it("logs in with fixed user from env (via cy.ensureSession)", () => {
+    cy.ensureSession();
+    cy.visit("/");
+
+    home
+      .getWelcomeUser()
+      .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
     home.getLogoutButton().should("be.visible");
 
     home.clickLogout();
@@ -19,10 +24,8 @@ describe("Login", () => {
   });
 
   it("cancels login from the modal (Close button)", () => {
-    cy.visit("/");
     auth.open();
     auth.getModal().should("be.visible");
-
     auth.clickCancel();
 
     home.getLogoutButton().should("not.be.visible");
@@ -30,10 +33,8 @@ describe("Login", () => {
   });
 
   it("cancels login from the modal (X icon)", () => {
-    cy.visit("/");
     auth.open();
     auth.getModal().should("be.visible");
-
     auth.clickCloseX();
 
     home.getLogoutButton().should("not.be.visible");

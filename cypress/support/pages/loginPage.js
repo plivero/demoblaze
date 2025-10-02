@@ -22,22 +22,33 @@ export default class LoginPage {
   }
 
   fillUsername(username) {
-    this.elements.usernameInput().click().clear().type(username);
+    this.elements.usernameInput().clear().type(username);
   }
 
   fillPassword(password) {
-    this.elements.passwordInput().click().clear().type(password);
+    this.elements.passwordInput().clear().type(password);
+  }
+
+  fillLogin(username, password) {
+    this.fillUsername(username);
+    this.fillPassword(password);
+  }
+
+  // Encapsula force:true e sincroniza o sumiço do modal
+  submitLogin() {
+    this.elements.submitButton().click({ force: true });
+    this.elements.modal().should("not.be.visible");
   }
 
   clickSubmit() {
-    this.elements.submitButton().click();
+    this.elements.submitButton().click({ force: true });
   }
 
   clickCancel() {
-    this.elements.cancelButton().click();
+    this.elements.cancelButton().click({ force: true });
   }
 
   clickCloseX() {
-    this.elements.closeX().click();
+    this.elements.closeX().click({ force: true });
   }
 }

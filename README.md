@@ -8,7 +8,7 @@
 
 This repository contains an automated test suite built with Cypress for the Demoblaze store, combining focused UI flows with lightweight API checks. It applies modern practices such as the Page Object Model (POM), environment-based configuration via cypress.env.json, DRY helpers for repeatable actions (e.g., adding items, cart totals), and session reuse with cy.session() to keep specs fast and independent.
 
-The suite is designed to be scalable, maintainable, and reproducible. It targets the most critical purchase path (laptops) with validations for login, cart operations, pagination, and price consistency (list ↔ detail ↔ cart ↔ total). Tests favor assertion-driven synchronization (no intercepts, only one agreed fixed wait) and headless execution, making the project ready for straightforward CI adoption when needed.
+The suite is designed to be scalable, maintainable, and reproducible. It targets the most critical purchase path (laptops) with validations for login, cart operations, pagination, and price consistency (list ↔ detail ↔ cart ↔ total). Tests favor assertion-driven synchronization and headless execution, making the project ready for straightforward CI adoption when needed.
 
 ---
 
@@ -65,7 +65,7 @@ demoblaze/
 - **Clean POM:** Page Objects include **only** locators and simple actions.
 - **Lean specs:** specs contain **assertions only**; move calculations/loops to **helpers**.
 - **DRY:** reuse methods and helpers to avoid repeated blocks.
-- **Assertion-driven sync:** avoid arbitrary sleeps. **Single agreed exception:** `openLaptops()` uses `cy.wait(3000)`.
+- **Assertion-driven sync:** avoid arbitrary sleeps. **Single agreed exception:**
 - **Reusable session:** `loginSession()` with `cy.session()` in `beforeEach`.
 - **Test independence:** each test prepares and validates its own state (e.g., cart ends empty when required).
 - **Environment variables:** credentials in `cypress.env.json` (ignored by Git).
