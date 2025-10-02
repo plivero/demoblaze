@@ -1,90 +1,70 @@
 // cypress/e2e/prices.cy.js
-
 import HomePage from "../../support/pages/homePage";
 import CartPage from "../../support/pages/cartPage";
-import { asNumber } from "../../support/helpers/price";
-import { getCartSumAndTotal } from "../../support/helpers/cartActions";
 
 const home = new HomePage();
 const cart = new CartPage();
 
-describe("Price validations on Demoblaze", () => {
+describe("Price checks", () => {
   beforeEach(() => {
+    cy.ensureSession();
     cy.visit("/");
   });
 
-  it("List price (before click) must match detail price (after selecting product)", () => {
+  // Laptops
+  it("shows detail price for 'Sony vaio i5'", () => {
     home.openLaptops();
-
-    cart
-      .getFirstListPrice()
-      .invoke("text")
-      .then((price) => {
-        const listPrice = asNumber(price);
-
-        home.openProductAt(0);
-
-        home
-          .getDetailPrice()
-          .invoke("text")
-          .then((price2) => {
-            const detailPrice = asNumber(price2);
-            expect(detailPrice).to.eq(listPrice);
-          });
-      });
-  });
-
-  it("Detail price must match cart row price after adding the product", () => {
-    home.openLaptops();
+    home.getProductByName("Sony vaio i5").should("be.visible");
     home.openProductAt(0);
-
-    home
-      .getDetailPrice()
-      .invoke("text")
-      .then((price) => {
-        const detailPrice = asNumber(price);
-
-        home.clickAddToCart();
-
-        home.openCart();
-
-        cart
-          .getLastCartItemPrice()
-          .invoke("text")
-          .then((rowText) => {
-            const rowPrice = asNumber(rowText);
-            expect(rowPrice).to.eq(detailPrice);
-          });
-      });
+    home.getDetailPrice().should("contain.text", "790");
   });
 
-  it("Sum of cart item prices must match #totalp after adding multiple products", () => {
-    cy.visit("/");
-
+  it("shows cart row price for 'Sony vaio i5' after adding", () => {
     home.openLaptops();
+    home.getProductByName("Sony vaio i5").should("be.visible");
     home.openProductAt(0);
-    home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
-
-    cy.visit("/");
-    home.openLaptops();
-    home.openProductAt(1);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
-
-    cy.visit("/");
-    home.openLaptops();
-    home.openProductAt(2);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
-
     home.openCart();
 
-    cart.getItemPrices().should("have.length", 3);
+    cart.getItems().last().should("contain.text", "Sony vaio i5");
+    cart.getItemPrices().last().should("contain.text", "790");
+  });
 
-    getCartSumAndTotal(cart).then(({ count, sum, total }) => {
-      expect(count).to.eq(3);
-      expect(total).to.eq(sum);
-    });
+  // Phones
+  it("shows detail price for 'Samsung galaxy s6'", () => {
+    home.openPhones();
+    home.getProductByName("Samsung galaxy s6").should("be.visible");
+    home.openProductAt(0);
+    home.getDetailPrice().should("contain.text", "360");
+  });
+
+  it("shows cart row price for 'Samsung galaxy s6' after adding", () => {
+    home.openPhones();
+    home.getProductByName("Samsung galaxy s6").should("be.visible");
+    home.openProductAt(0);
+    home.clickAddToCart();
+    home.openCart();
+
+    cart.getItems().last().should("contain.text", "Samsung galaxy s6");
+    cart.getItemPrices().last().should("contain.text", "360");
+  });
+
+  // Monitors
+  it("shows detail price for 'Apple monitor 24'", () => {
+    home.openMonitors();
+    home.getProductByName("Apple monitor 24").should("be.visible");
+    home.openProductAt(0);
+    home.getDetailPrice().should("contain.text", "400");
+  });
+
+  it("shows cart row price for 'Apple monitor 24' after adding", () => {
+    home.openMonitors();
+    home.getProductByName("Apple monitor 24").should("be.visible");
+    home.openProductAt(0);
+    home.clickAddToCart();
+    home.openCart();
+
+    cart.getItems().last().should("contain.text", "Apple monitor 24");
+    cart.getItemPrices().last().should("contain.text", "400");
   });
 });

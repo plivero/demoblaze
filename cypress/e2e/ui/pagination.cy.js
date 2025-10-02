@@ -1,12 +1,15 @@
 // cypress/e2e/pagination.cy.js
-
 import HomePage from "../../support/pages/homePage";
 
 describe("Pagination", () => {
   const home = new HomePage();
 
-  it("navega com Next e Previous validando itens de referência (sem invoke)", () => {
+  beforeEach(() => {
+    cy.ensureSession();
     cy.visit("/");
+  });
+
+  it("navigates with Next/Previous validating reference items", () => {
     home.openAllCategories();
 
     home.getProductByName("Samsung galaxy s6").should("be.visible");
@@ -18,7 +21,6 @@ describe("Pagination", () => {
     home.getProductByName("Samsung galaxy s7").should("not.exist");
 
     home.getPreviousPageButton().should("be.visible");
-
     home.clickPrevious();
 
     home.getProductByName("Samsung galaxy s7").should("be.visible");
