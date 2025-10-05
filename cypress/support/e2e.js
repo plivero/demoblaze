@@ -23,15 +23,13 @@ const auth = new LoginPage();
 Cypress.Commands.add("ensureSession", () => {
   function uiLogin() {
     cy.visit("/");
-    home.getLoginButton().click(); // abre modal
+    home.getLoginButton().click();
     auth.fillLogin(Cypress.env("USER_NAME"), Cypress.env("USER_PASSWORD"));
-    auth.submitLogin(); // clica e espera o modal sumir
+    auth.submitLogin();
   }
 
-  // troquei a chave pra evitar conflito com sessões antigas
   cy.session(["login@stable", Cypress.env("USER_NAME")], uiLogin, {
     cacheAcrossSpecs: true,
-    // Valida de forma mais robusta: estar logado = Logout visível
     validate() {
       cy.visit("/");
       cy.get("#logout2").should("be.visible");
@@ -39,8 +37,6 @@ Cypress.Commands.add("ensureSession", () => {
   });
 });
 
-// (opcional, mas recomendado se o Bootstrap insistir em soltar a exceção de transição)
-// Mantém seus testes limpos sem if/esperas na spec/POM
 Cypress.on("uncaught:exception", (err) => {
   if (String(err).includes("Modal is transitioning")) return false;
 });

@@ -11,16 +11,6 @@ export function addSameProductNTimes(page, times = 1) {
   }
 }
 
-export const getCartSumAndTotal = (cartPage) =>
-  cartPage.getItemPrices().then(($cells) => {
-    const count = $cells.length;
-    const sum = sumPriceElements($cells.toArray());
-    return cartPage
-      .getTotal()
-      .invoke("text")
-      .then((t) => ({ count, sum, total: asNumber(t) }));
-  });
-
 export function addProductsByIndexes(homePage, indexes = []) {
   homePage.openLaptops();
 

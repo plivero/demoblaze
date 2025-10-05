@@ -1,9 +1,9 @@
 // cypress/e2e/login.cy.js
 import HomePage from "../../support/pages/homePage";
-import Auth from "../../support/pages/loginPage";
+import Login from "../../support/pages/loginPage";
 
 const home = new HomePage();
-const auth = new Auth();
+const login = new Login();
 
 describe("Login", () => {
   beforeEach(() => {
@@ -24,20 +24,40 @@ describe("Login", () => {
   });
 
   it("cancels login from the modal (Close button)", () => {
-    auth.open();
-    auth.getModal().should("be.visible");
-    auth.clickCancel();
+    login.open();
+    login.getModal().should("be.visible");
+    login.clickCancel();
 
     home.getLogoutButton().should("not.be.visible");
     home.getLoginButton().should("be.visible");
   });
 
   it("cancels login from the modal (X icon)", () => {
-    auth.open();
-    auth.getModal().should("be.visible");
-    auth.clickCloseX();
+    login.open();
+    login.getModal().should("be.visible");
+    login.clickCloseX();
 
     home.getLogoutButton().should("not.be.visible");
     home.getLoginButton().should("be.visible");
+  });
+
+  it("fails login with invalid credentials (keeps user logged out)", () => {
+    cy.visit("/");
+
+    login.open();
+    login.getModal().should("be.visible");
+
+    login.fillLogin(
+      "Usuario invalido ta ligado?",
+      "ta ligado na senha errada?"
+    );
+    login.clickSubmit();
+
+    cy.on("window:alert", (txt) => {
+      expect(txt).to.contain("User does not exist");
+    });
+    home.getLogoutButton().should("not.be.visible");
+    home.getLoginButton().should("be.visible");
+    login.clickCloseX();
   });
 });
