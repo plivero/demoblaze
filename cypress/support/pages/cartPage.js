@@ -3,17 +3,19 @@
 
 export default class CartPage {
   elements = {
-    rows: () => cy.get("body").find("#tbodyid tr"),
+    rows: () => cy.get("#tbodyid tr"),
+    deleteLinks: () => cy.get("#tbodyid a[onclick*='deleteItem']"),
     placeOrder: () => cy.contains("button", "Place Order"),
     itemPrices: () => cy.get("#tbodyid tr td:nth-child(3)"),
     total: () => cy.get("#totalp"),
-    // moved from PricesPage: list prices on catalog pages
     listPrices: () => cy.get("#tbodyid h5"),
   };
 
-  // getters
   getItems() {
     return this.elements.rows();
+  }
+  getDeleteLinks() {
+    return this.elements.deleteLinks();
   }
   getItemPrices() {
     return this.elements.itemPrices();
@@ -21,7 +23,6 @@ export default class CartPage {
   getTotal() {
     return this.elements.total();
   }
-  // getters moved from PricesPage
   getListPrices() {
     return this.elements.listPrices();
   }
@@ -32,16 +33,23 @@ export default class CartPage {
     return this.elements.itemPrices().last();
   }
 
-  // actions
   clickPlaceOrder() {
-    this.elements.placeOrder().click();
+    this.elements.placeOrder().click({ force: true });
+  }
+  removeItemAt(index) {
+    this.elements.deleteLinks().eq(index).click({ force: true });
+  }
+  removeFirstItem() {
+    this.elements.deleteLinks().first().click({ force: true });
   }
   deleteFirstItem() {
-    this.elements
-      .rows()
-      .first()
-      .within(() => {
-        cy.contains("Delete").click();
-      });
+    this.removeFirstItem();
+  }
+  emptyCart() {
+    cy.get("#tbodyid a[onclick*='deleteItem']").click({
+      multiple: true,
+      force: true,
+    });
+    this.getItems().should("have.length", 0);
   }
 }

@@ -1,4 +1,4 @@
-// cypress/e2e/purchase-laptop.cy.js
+// cypress/e2e/purchase-monitor.cy.js
 import { getUserName } from "../../support/helpers/env";
 import { orderData } from "../../support/helpers/orderData";
 import { addSameProductNTimes } from "../../support/helpers/cartActions";
@@ -10,16 +10,16 @@ const home = new HomePage();
 const cart = new CartPage();
 const order = new Order();
 
-describe("Purchase - Laptop", () => {
+describe("Purchase - Monitor", () => {
   beforeEach(() => {
     cy.ensureSession();
     cy.visit("/");
   });
 
-  it("buys a laptop (happy path)", () => {
+  it("buys a monitor (happy path)", () => {
     home.getWelcomeUser().should("contain.text", `Welcome ${getUserName()}`);
 
-    home.openLaptops();
+    home.openMonitors();
     home.openProductAt(0);
 
     home.getAddToCartButton().should("be.visible");
@@ -45,8 +45,8 @@ describe("Purchase - Laptop", () => {
     home.getLogoutButton().should("not.be.visible");
   });
 
-  it("adds one product and deletes it", () => {
-    home.openLaptops();
+  it("adds one monitor and deletes it", () => {
+    home.openMonitors();
     home.openProductAt(0);
 
     home.getAddToCartButton().should("be.visible");
@@ -59,9 +59,9 @@ describe("Purchase - Laptop", () => {
     cy.wait(700);
   });
 
-  it("buys three units of the same laptop", () => {
-    home.openLaptops();
-    home.getProductByName("Sony vaio i5").should("be.visible");
+  it("buys three units of the same monitor", () => {
+    home.openMonitors();
+    home.getProductByName("Apple monitor 24").should("be.visible");
     home.openProductAt(0);
 
     addSameProductNTimes(home, 3);
@@ -85,11 +85,11 @@ describe("Purchase - Laptop", () => {
     home.getLogoutButton().should("not.be.visible");
   });
 
-  it("adds all 6 laptops (first page) and completes purchase", () => {
-    home.addLaptopsByIndexes([0, 1, 2, 3, 4, 5]);
+  it("adds all monitors (first page) and completes purchase", () => {
+    home.addMonitorsByIndexes([0, 1]);
 
     home.openCart();
-    cart.getItems().should("have.length", 6);
+    cart.getItems().should("have.length", 2);
     cart.clickPlaceOrder();
 
     order.fill(orderData());
@@ -121,7 +121,7 @@ describe("Purchase - Laptop", () => {
     order.getModal().should("not.be.visible");
   });
 
-  it.only("shows required-fields alert when purchasing with empty form", () => {
+  it("shows required-fields alert when purchasing with empty form", () => {
     home.openCart();
     cart.getItems().should("have.length", 0);
 
