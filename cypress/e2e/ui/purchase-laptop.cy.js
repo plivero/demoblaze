@@ -1,7 +1,5 @@
 // cypress/e2e/purchase-laptop.cy.js
-import { getUserName } from "../../support/helpers/env";
 import { orderData } from "../../support/helpers/orderData";
-import { addSameProductNTimes } from "../../support/helpers/cartActions";
 import HomePage from "../../support/pages/homePage";
 import CartPage from "../../support/pages/cartPage";
 import Order from "../../support/pages/orderPage";
@@ -14,10 +12,15 @@ describe("Purchase - Laptop", () => {
   beforeEach(() => {
     cy.ensureSession();
     cy.visit("/");
+    home.openCart();
+    cart.emptyCart();
+    cy.visit("/");
   });
 
   it("buys a laptop (happy path)", () => {
-    home.getWelcomeUser().should("contain.text", `Welcome ${getUserName()}`);
+    home
+      .getWelcomeUser()
+      .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
 
     home.openLaptops();
     home.openProductAt(0);
@@ -56,7 +59,6 @@ describe("Purchase - Laptop", () => {
     cart.getItems().should("have.length.at.least", 1);
     cart.deleteFirstItem();
     cart.getItems().should("have.length", 0);
-    cy.wait(700);
   });
 
   it("buys three units of the same laptop", () => {
@@ -64,7 +66,10 @@ describe("Purchase - Laptop", () => {
     home.getProductByName("Sony vaio i5").should("be.visible");
     home.openProductAt(0);
 
-    addSameProductNTimes(home, 3);
+    home.getAddToCartButton().should("be.visible");
+    Cypress._.times(3, () => {
+      home.addCurrentProductToCart();
+    });
 
     home.openCart();
     cart.clickPlaceOrder();
@@ -105,7 +110,9 @@ describe("Purchase - Laptop", () => {
   });
 
   it("Place Order with empty cart does not conclude", () => {
-    home.getWelcomeUser().should("contain.text", `Welcome ${getUserName()}`);
+    home
+      .getWelcomeUser()
+      .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
     home.openCart();
     cart.getItems().should("have.length", 0);
 
@@ -121,17 +128,16 @@ describe("Purchase - Laptop", () => {
     order.getModal().should("not.be.visible");
   });
 
-  it.only("shows required-fields alert when purchasing with empty form", () => {
+  it("shows required-fields alert when purchasing with empty form", () => {
     home.openCart();
     cart.getItems().should("have.length", 0);
 
     cart.clickPlaceOrder();
     order.getModal().should("be.visible");
 
+    cy.expectNextAlert("Please fill out Name and Creditcard.");
+
     order.clickPurchase();
-    cy.on("window:alert", (txt) => {
-      expect(txt).to.contain("Please fill out Name and Creditcard.");
-    });
     order.getModal().should("be.visible");
   });
 });

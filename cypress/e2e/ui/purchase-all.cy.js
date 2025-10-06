@@ -12,35 +12,29 @@ describe("Purchase - one from each category", () => {
   beforeEach(() => {
     cy.ensureSession();
     cy.visit("/");
-
-    // clean cart before the test (keep tests independent)
     home.openCart();
     cart.emptyCart();
     cy.visit("/");
   });
 
   it("adds 1 Laptop + 1 Phone + 1 Monitor and completes purchase", () => {
-    // 1) Laptop
     home.openLaptops();
     home.openProductAt(0);
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
 
-    // 2) Phone
     cy.visit("/");
     home.openPhones();
     home.openProductAt(0);
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
 
-    // 3) Monitor
     cy.visit("/");
     home.openMonitors();
     home.openProductAt(0);
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
 
-    // Go to cart and finish the order
     home.openCart();
     cart.getItems().should("have.length.at.least", 3);
     cart.clickPlaceOrder();

@@ -1,7 +1,5 @@
 // cypress/e2e/purchase-phone.cy.js
-import { getUserName } from "../../support/helpers/env";
 import { orderData } from "../../support/helpers/orderData";
-import { addSameProductNTimes } from "../../support/helpers/cartActions";
 import HomePage from "../../support/pages/homePage";
 import CartPage from "../../support/pages/cartPage";
 import Order from "../../support/pages/orderPage";
@@ -14,10 +12,15 @@ describe("Purchase - Phone", () => {
   beforeEach(() => {
     cy.ensureSession();
     cy.visit("/");
+    home.openCart();
+    cart.emptyCart();
+    cy.visit("/");
   });
 
   it("buys a phone (happy path)", () => {
-    home.getWelcomeUser().should("contain.text", `Welcome ${getUserName()}`);
+    home
+      .getWelcomeUser()
+      .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
 
     home.openPhones();
     home.openProductAt(0);
@@ -64,7 +67,10 @@ describe("Purchase - Phone", () => {
     home.getProductByName("Samsung galaxy s6").should("be.visible");
     home.openProductAt(0);
 
-    addSameProductNTimes(home, 3);
+    home.getAddToCartButton().should("be.visible");
+    Cypress._.times(3, () => {
+      home.addCurrentProductToCart();
+    });
 
     home.openCart();
     cart.clickPlaceOrder();
@@ -105,7 +111,9 @@ describe("Purchase - Phone", () => {
   });
 
   it("Place Order with empty cart does not conclude", () => {
-    home.getWelcomeUser().should("contain.text", `Welcome ${getUserName()}`);
+    home
+      .getWelcomeUser()
+      .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
     home.openCart();
     cart.getItems().should("have.length", 0);
 
@@ -129,9 +137,7 @@ describe("Purchase - Phone", () => {
     order.getModal().should("be.visible");
 
     order.clickPurchase();
-    cy.on("window:alert", (txt) => {
-      expect(txt).to.contain("Please fill out Name and Creditcard.");
-    });
+    cy.expectNextAlert("Please fill out Name and Creditcard.");
     order.getModal().should("be.visible");
   });
 });
