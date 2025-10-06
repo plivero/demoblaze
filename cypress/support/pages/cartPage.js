@@ -1,10 +1,13 @@
 // cypress/support/pages/cartPage.js
 /// <reference types="cypress" />
 
+const deleteSelector = 'a[onclick*="deleteItem"]';
+
 export default class CartPage {
   elements = {
+    container: () => cy.get("#tbodyid"),
     rows: () => cy.get("#tbodyid tr"),
-    deleteLinks: () => cy.get("#tbodyid a[onclick*='deleteItem']"),
+    deleteLinks: () => cy.get(`#tbodyid ${deleteSelector}`),
     placeOrder: () => cy.contains("button", "Place Order"),
     itemPrices: () => cy.get("#tbodyid tr td:nth-child(3)"),
     total: () => cy.get("#totalp"),
@@ -46,10 +49,16 @@ export default class CartPage {
     this.removeFirstItem();
   }
   emptyCart() {
-    cy.get("#tbodyid a[onclick*='deleteItem']").click({
-      multiple: true,
-      force: true,
-    });
+    this.elements
+      .container()
+      .should("exist")
+      .then(($cart) => {
+        const $deletes = $cart.find(deleteSelector);
+        if ($deletes.length) {
+          cy.wrap($deletes).click({ multiple: true, force: true });
+        }
+      });
+
     this.getItems().should("have.length", 0);
   }
 }

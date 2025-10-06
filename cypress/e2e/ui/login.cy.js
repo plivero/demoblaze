@@ -10,7 +10,7 @@ describe("Login", () => {
     cy.visit("/");
   });
 
-  it("logs in with fixed user from env (via cy.ensureSession)", () => {
+  it("logs in with fixed user from env", () => {
     cy.ensureSession();
     cy.visit("/");
 

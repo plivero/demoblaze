@@ -17,15 +17,11 @@ describe("Cart - basic empty state", () => {
     home.clickAddToCart();
 
     home.openCart();
-
     cart.emptyCart();
-
     cart.getItems().should("have.length", 0);
 
     cy.visit("/");
-
     home.openCart();
-
     cart.getItems().should("have.length", 0);
   });
 });

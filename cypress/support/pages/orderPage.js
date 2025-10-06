@@ -18,13 +18,13 @@ export default class Order {
     closeBtn: () => cy.get("#orderModal .btn-secondary"),
   };
 
-  fill(d) {
-    this.elements.name().clear().type(d.name);
-    this.elements.country().clear().type(d.country);
-    this.elements.city().clear().type(d.city);
-    this.elements.card().clear().type(d.card);
-    this.elements.month().clear().type(d.month);
-    this.elements.year().clear().type(d.year);
+  fill(data) {
+    this.elements.name().clear().type(data.name);
+    this.elements.country().clear().type(data.country);
+    this.elements.city().clear().type(data.city);
+    this.elements.card().clear().type(data.card);
+    this.elements.month().clear().type(data.month);
+    this.elements.year().clear().type(data.year);
   }
 
   clickPurchase() {

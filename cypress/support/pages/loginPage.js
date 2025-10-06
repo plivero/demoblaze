@@ -34,7 +34,6 @@ export default class LoginPage {
     this.fillPassword(password);
   }
 
-  // Encapsula force:true e sincroniza o sumiço do modal
   submitLogin() {
     this.elements.submitButton().click({ force: true });
     this.elements.modal().should("not.be.visible");

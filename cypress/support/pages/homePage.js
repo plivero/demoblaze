@@ -11,20 +11,15 @@ export default class HomePage {
     phonesCategory: () => cy.get("[onclick=\"byCat('phone')\"]"),
     monitorsCategory: () => cy.get("[onclick=\"byCat('monitor')\"]"),
     productTitles: () => cy.get("a.hrefch"),
-
-    // detail scope
     detailContainer: () => cy.get("#tbodyid"),
     addToCartButton: () => cy.get("#tbodyid a.btn-success"),
-
     detailName: () => cy.get("#tbodyid .name"),
     detailPrice: () => cy.get("#tbodyid .price-container"),
-
     nextPage: () => cy.get("#next2"),
     prevPage: () => cy.get("#prev2"),
     allCategories: () => cy.get("#cat"),
   };
 
-  // header
   clickLogin() {
     this.elements.loginButton().click();
   }
@@ -41,12 +36,10 @@ export default class HomePage {
     return this.elements.welcomeUser();
   }
 
-  // list
   getProductTitles() {
     return this.elements.productTitles();
   }
 
-  // detail
   getAddToCartButton() {
     return this.elements.addToCartButton();
   }
@@ -57,11 +50,9 @@ export default class HomePage {
     return this.elements.detailPrice();
   }
   clickAddToCart() {
-    cy.once("window:alert", () => {}); // silencia o alert
-    cy.get("a.btn-success").filter(":visible").first().click({ force: true });
+    cy.ignoreNextAlert();
+    this.getAddToCartButton().filter(":visible").first().click({ force: true });
   }
-
-  // navigation
   openAllCategories() {
     this.elements.allCategories().click();
   }
@@ -73,7 +64,7 @@ export default class HomePage {
       .eq(index)
       .scrollIntoView()
       .click({ force: true });
-    this.elements.detailContainer(); // garante que entrou no detalhe
+    this.elements.detailContainer().should("exist");
   }
 
   openCart() {
@@ -81,16 +72,17 @@ export default class HomePage {
   }
   openLaptops() {
     this.elements.laptopsCategory().click({ force: true });
-    cy.wait(3000); // espera fixa combinada para Laptops
+    this.elements.productTitles().filter(":visible").should("exist");
   }
   openPhones() {
     this.elements.phonesCategory().click({ force: true });
+    this.elements.productTitles().filter(":visible").should("exist");
   }
   openMonitors() {
     this.elements.monitorsCategory().click({ force: true });
+    this.elements.productTitles().filter(":visible").should("exist");
   }
 
-  // pagination
   getNextPageButton() {
     return this.elements.nextPage();
   }
@@ -104,13 +96,10 @@ export default class HomePage {
     this.elements.prevPage().scrollIntoView().click({ force: true });
   }
 
-  // utils
   getProductByName(name) {
     return cy.contains("a.hrefch", name);
   }
 
-  // ------------------------------------------------------------------
-  // Helpers simples por categoria (sem condições)
   addLaptopsByIndexes(indexes = []) {
     Cypress._.each(indexes, (i) => {
       this.openLaptops();
@@ -139,5 +128,14 @@ export default class HomePage {
       this.clickAddToCart();
       cy.visit("/");
     });
+  }
+
+  addCurrentProductToCart() {
+    cy.ignoreNextAlert();
+    this.elements
+      .addToCartButton()
+      .filter(":visible")
+      .first()
+      .click({ force: true });
   }
 }
