@@ -1,8 +1,8 @@
 // cypress/e2e/purchase-all.cy.js
-import HomePage from "../../support/pages/homePage";
-import CartPage from "../../support/pages/cartPage";
-import OrderPage from "../../support/pages/orderPage";
-import { orderData } from "../../support/helpers/orderData";
+import HomePage from "../support/pages/homePage";
+import CartPage from "../support/pages/cartPage";
+import OrderPage from "../support/pages/orderPage";
+import { orderData } from "../support/helpers/orderData";
 
 const home = new HomePage();
 const cart = new CartPage();

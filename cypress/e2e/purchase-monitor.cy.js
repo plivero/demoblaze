@@ -1,8 +1,8 @@
 // cypress/e2e/purchase-monitor.cy.js
-import { orderData } from "../../support/helpers/orderData";
-import HomePage from "../../support/pages/homePage";
-import CartPage from "../../support/pages/cartPage";
-import Order from "../../support/pages/orderPage";
+import { orderData } from "../support/helpers/orderData";
+import HomePage from "../support/pages/homePage";
+import CartPage from "../support/pages/cartPage";
+import Order from "../support/pages/orderPage";
 
 const home = new HomePage();
 const cart = new CartPage();
