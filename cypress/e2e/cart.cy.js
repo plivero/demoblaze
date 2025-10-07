@@ -1,6 +1,6 @@
 // cypress/e2e/ui/cart.cy.js
-import HomePage from "../../support/pages/homePage";
-import CartPage from "../../support/pages/cartPage";
+import HomePage from "../support/pages/homePage";
+import CartPage from "../support/pages/cartPage";
 
 const home = new HomePage();
 const cart = new CartPage();

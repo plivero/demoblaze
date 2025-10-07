@@ -1,5 +1,5 @@
 // cypress/e2e/catalog.cy.js
-import HomePage from "../../support/pages/homePage";
+import HomePage from "../support/pages/homePage";
 
 describe("Catalog / Navigation", () => {
   const home = new HomePage();

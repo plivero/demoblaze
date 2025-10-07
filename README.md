@@ -6,9 +6,11 @@
 
 ## About
 
-This repository contains an automated test suite built with Cypress for the Demoblaze store, combining focused UI flows with lightweight API checks. It applies modern practices such as the Page Object Model (POM), environment-based configuration via cypress.env.json, DRY helpers for repeatable actions (e.g., adding items, cart totals), and session reuse with cy.session() to keep specs fast and independent.
+This repository contains an automated test suite built with Cypress for the Demoblaze Product Store.
+It focuses on clean, maintainable UI flows and light API validations, following the Page Object Model (POM) pattern and using environment-based configuration.
 
-The suite is designed to be scalable, maintainable, and reproducible. It targets the most critical purchase path (laptops) with validations for login, cart operations, pagination, and price consistency (list ↔ detail ↔ cart ↔ total). Tests favor assertion-driven synchronization and headless execution, making the project ready for straightforward CI adoption when needed.
+The suite is fast, deterministic, and easy to extend.
+It applies reusable sessions and alert commands to keep tests independent, stable, and ready for headless or CI execution.
 
 ---
 
@@ -31,7 +33,6 @@ The suite is designed to be scalable, maintainable, and reproducible. It targets
 - [How to Run](#how-to-run)
 - [Environment Variables](#environment-variables)
 - [Test Strategy & Design](#test-strategy--design)
-- [API Tests](#api-tests)
 - [UI Tests](#ui-tests)
 - [References](#references)
 
@@ -41,35 +42,36 @@ The suite is designed to be scalable, maintainable, and reproducible. It targets
 demoblaze/
 ├─ cypress/
 │  ├─ e2e/
-│  │  ├─ api/
-│  │  └─ ui/
 │  ├─ fixtures/
 │  └─ support/
 │     ├─ helpers/
 │     ├─ pages/
+│  ├─ commands.js
+│  ├─ e2e.js
 ├─ cypress.env.json # Local environment variables (added manually)
 
 ```
 
 ## Folders & Files Overview
 
-- **cypress/e2e/api/** → API endpoint validation (e.g., `/bycat`).
-- **cypress/e2e/ui/** → UI flows (login, pricing checks, cart, checkout).
-- **cypress/support/helpers/** → Reusable utilities (`session.js`, `cartActions.js`, `price.js`, `orderData.js`, etc.).
+- **cypress/e2e** → All Cypress specs (UI only).
+- **cypress/support/helpers/** → Minimal helpers for static data (e.g., orderData.js).
 - **cypress/support/pages/** → Page Objects (POM) with locators and simple actions only.
+- **cypress/support/commands.js** → Custom commands (ensureSession, ignoreNextAlert, expectNextAlert).
+- **cypress/support/e2e.js/** → Global imports and configuration.
 
 ---
 
 ## Best Practices
 
-- **Clean POM:** Page Objects include **only** locators and simple actions.
-- **Lean specs:** specs contain **assertions only**; move calculations/loops to **helpers**.
-- **DRY:** reuse methods and helpers to avoid repeated blocks.
-- **Assertion-driven sync:** avoid arbitrary sleeps. **Single agreed exception:**
-- **Reusable session:** `loginSession()` with `cy.session()` in `beforeEach`.
-- **Test independence:** each test prepares and validates its own state (e.g., cart ends empty when required).
-- **Environment variables:** credentials in `cypress.env.json` (ignored by Git).
-- **Headless execution:** default for fast, deterministic runs and CI readiness.
+- **Clean POM:** Page Objects include only locators and direct actions (`click`, `type`, `get`, etc.).
+- **Specs stay readable:** assertions only — no logic, loops, or data handling.
+- **Reusable session:** use `cy.ensureSession()` to restore a logged-in state.
+- **Reusable alerts:**
+  - `cy.ignoreNextAlert()` to silence confirmation popups (e.g., Add to Cart);
+  - `cy.expectNextAlert('text')` to validate expected alert messages.
+- **Test independence:** each spec cleans its state (e.g., empty cart before start).
+- **Headless CI-ready:** `npx cypress run` ensures consistent, fast runs.
 
 ---
 
@@ -114,9 +116,7 @@ npx cypress run --spec "cypress/e2e/specs/apiTests/*.cy.js"
 
 Sensitive or configurable data is externalized through environment variables.
 
-- **Local development** → stored in `cypress.env.json` (ignored by Git).
-
-Example (`cypress.env.json`):
+Example:
 
 ```json
 {
@@ -129,50 +129,42 @@ Example (`cypress.env.json`):
 
 ## Test Strategy & Design
 
-The approach balances **efficiency, coverage, and reliability**. We prioritized the **business-critical UI purchase path for laptops** (login → browse → add to cart → checkout → confirmation) and added a lightweight **API smoke** for catalog stability. Tests are designed to be **deterministic**, **maintainable**, and **fast**.
+The strategy began by validating the **essential purchase flow** (login → browse → add to cart → checkout → confirmation) to ensure the core functionality was stable.  
+After that, the suite evolved to cover the **entire mapped site flow**, including all product categories (Laptops, Phones, Monitors), cart operations, modal behaviors, and alert validations.
 
-This combination yields a suite that is **scalable** (easy to extend), **maintainable** (clear separation between assertions and actions), and **practical** (focused on real user value and realistic risks).
+The focus is on building a **complete and maintainable test suite**, with realistic coverage that reflects how users interact with the Demoblaze store.  
+Tests are **assertion-driven**, using clean Page Objects for structure and short, reusable helpers to maintain readability and consistency.
 
 ### Principles
 
-- **Critical-path first (UI):** cover the end-to-end laptop purchase flow.
-- **Assertion-only specs:** specs focus on expectations; actions and locators live in POM/helpers.
-- **Reusability (DRY):** centralize repeated flows and calculations in helpers
+- **Expanded coverage:** from the essential purchase flow to additional scenarios (categories, alerts, empty cart, invalid fields).
+- **Realistic validation:** verify what the UI actually does, not what it _should_ do.
+- **Session bootstrap:** each test starts from a stable, logged-in state using a reusable session to ensure consistency and speed.
+- **Data minimalism:** tests use only essential data for inputs and validation, avoiding external dependencies or unnecessary randomness.
 
 ### Data
 
-- **Environment variables:** fixed credentials in `cypress.env.json` (`USER_NAME`, `USER_PASSWORD`).
-- **Deterministic test data:** simple `orderData()` helper for modal fields (no external randomness).
-- **No signup by API:** avoids polluting the public dataset.
+- **Environment variables:** `USER_NAME`, `USER_PASSWORD` stored in `cypress.env.json`.
+- **Modal data:** `orderData()` helper generates consistent order inputs using faker.
 
 ### Coverage Techniques
 
-- **Use-case based:** real workflows (login, browse laptops, add/remove, place order, confirmation).
-- **Experience-based / exploratory:** initial manual pass identified fragile spots (render timing, pagination) to inform stable sync points.
-- **Positive + light negative:** happy paths (purchase), cancellation (login modal Close/X), and price consistency checks.
-- **Selective EP/BVA:** applied where meaningful (e.g., price parsing/aggregation, item counts, pagination indices) without overextending scope.
-
----
-
-## API Tests
-
-**Location:** `cypress/e2e/api/`
-
-- **Endpoints covered:** `POST /bycat` (category: `notebook`).
-- **Public, no auth:** proves the catalog endpoint works without authentication.
-- **Contract checks:** asserts `200` and a non-empty `Items` array with `id`, `title`, `price`.
-- **Simplicity:** short, deterministic smoke to validate backend data availability.
+- **Exploratory-informed:** the initial manual mapping revealed unstable areas (render timing, alerts, pagination), leading to stronger DOM-based sync.
+- **Positive and light negative:** includes standard purchase flow, modal cancellations, required field alerts, and empty cart behavior.
+- **Selective EP/BVA:** applied only where input or range validation adds real value (e.g., pagination indices, price parsing, item count).
+- **Adaptive validation:** when the platform shows inconsistent or non-deterministic behavior, tests assert the **observable response** (UI behavior) rather than idealized logic.
 
 ---
 
 ## UI Tests
 
-**Location:** `cypress/e2e/ui/`
+**Location:** `cypress/e2e/`
 
-- **Critical paths:** login (session reuse), laptop purchase (happy path), place order and confirmation.
-- **Cart operations:** add one and remove; buy three units of the same product; add six laptops (first page) and complete purchase.
-- **Pricing integrity:** list vs detail; detail vs last cart row; sum of row prices equals `#totalp`.
-- **Pagination:** add products by index on the laptops page.
+- **Purchase flows:** full end-to-end coverage for laptops, phones, and monitors, including single-item and multi-item purchases.
+- **Cart management:** adding, removing, and verifying products in various combinations before checkout.
+- **Validation cases:** attempts to purchase with missing required fields, empty cart checks, and modal interactions.
+- **Price consistency:** ensures alignment between product list, detail view, and total price check in the cart.
+- **Pagination and stability:** verifies that navigation and selection remain reliable across pages and categories.
 
 ---
 
