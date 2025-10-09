@@ -1,0 +1,42 @@
+name: Manual Tests (cross-browsers)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, edge, firefox]
+
+    env:
+      CYPRESS_USER_NAME: ${{ secrets.CYPRESS_USER_NAME }}
+      CYPRESS_USER_PASSWORD: ${{ secrets.CYPRESS_USER_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Show browser versions (debug)
+        run: |
+          google-chrome --version || true
+          microsoft-edge --version || true
+          firefox --version || true
+
+      - name: Run Cypress (${{ matrix.browser }})
+        run: |
+          echo "Running tests on ${{ matrix.browser }}"
+          npx cypress run \
+            --browser ${{ matrix.browser }} \
+            --headless \
+            --spec "cypress/e2e/**/*.cy.js"
