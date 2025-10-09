@@ -17,21 +17,27 @@ export default class CartPage {
   getItems() {
     return this.elements.rows();
   }
+
   getDeleteLinks() {
     return this.elements.deleteLinks();
   }
+
   getItemPrices() {
     return this.elements.itemPrices();
   }
+
   getTotal() {
     return this.elements.total();
   }
+
   getListPrices() {
     return this.elements.listPrices();
   }
+
   getFirstListPrice() {
     return this.elements.listPrices().filter(":visible").first();
   }
+
   getLastCartItemPrice() {
     return this.elements.itemPrices().last();
   }
@@ -39,15 +45,19 @@ export default class CartPage {
   clickPlaceOrder() {
     this.elements.placeOrder().click({ force: true });
   }
+
   removeItemAt(index) {
     this.elements.deleteLinks().eq(index).click({ force: true });
   }
+
   removeFirstItem() {
     this.elements.deleteLinks().first().click({ force: true });
   }
+
   deleteFirstItem() {
     this.removeFirstItem();
   }
+
   emptyCart() {
     this.elements
       .container()
@@ -58,7 +68,6 @@ export default class CartPage {
           cy.wrap($deletes).click({ multiple: true, force: true });
         }
       });
-
     this.getItems().should("have.length", 0);
   }
 }

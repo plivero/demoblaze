@@ -18,7 +18,6 @@ describe("Login", () => {
       .getWelcomeUser()
       .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
     home.getLogoutButton().should("be.visible");
-
     home.clickLogout();
     home.getLogoutButton().should("not.be.visible");
   });
@@ -43,21 +42,18 @@ describe("Login", () => {
 
   it("fails login with invalid credentials (keeps user logged out)", () => {
     cy.visit("/");
-
     login.open();
     login.getModal().should("be.visible");
-
     login.fillLogin(
-      "Usuario invalido ta ligado?",
-      "ta ligado na senha errada?"
+      "User-Not-Valid_fJ93jKi4fs347ik",
+      "Password-Not-Valid_fJ93jKi4fs347ik"
     );
     login.clickSubmit();
+    login.expectNextAlert("User does not exist");
 
-    cy.on("window:alert", (txt) => {
-      expect(txt).to.contain("User does not exist");
-    });
     home.getLogoutButton().should("not.be.visible");
     home.getLoginButton().should("be.visible");
+
     login.clickCloseX();
   });
 });

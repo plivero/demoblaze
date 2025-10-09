@@ -23,15 +23,19 @@ export default class HomePage {
   clickLogin() {
     this.elements.loginButton().click();
   }
+
   clickLogout() {
     this.elements.logoutButton().click({ force: true });
   }
+
   getLoginButton() {
     return this.elements.loginButton();
   }
+
   getLogoutButton() {
     return this.elements.logoutButton();
   }
+
   getWelcomeUser() {
     return this.elements.welcomeUser();
   }
@@ -43,16 +47,20 @@ export default class HomePage {
   getAddToCartButton() {
     return this.elements.addToCartButton();
   }
+
   getDetailName() {
     return this.elements.detailName();
   }
+
   getDetailPrice() {
     return this.elements.detailPrice();
   }
+
   clickAddToCart() {
     cy.ignoreNextAlert();
     this.getAddToCartButton().filter(":visible").first().click({ force: true });
   }
+
   openAllCategories() {
     this.elements.allCategories().click();
   }
@@ -70,14 +78,17 @@ export default class HomePage {
   openCart() {
     this.elements.cartButton().click({ force: true });
   }
+
   openLaptops() {
     this.elements.laptopsCategory().click({ force: true });
     this.elements.productTitles().filter(":visible").should("exist");
   }
+
   openPhones() {
     this.elements.phonesCategory().click({ force: true });
     this.elements.productTitles().filter(":visible").should("exist");
   }
+
   openMonitors() {
     this.elements.monitorsCategory().click({ force: true });
     this.elements.productTitles().filter(":visible").should("exist");
@@ -86,12 +97,15 @@ export default class HomePage {
   getNextPageButton() {
     return this.elements.nextPage();
   }
+
   getPreviousPageButton() {
     return this.elements.prevPage();
   }
+
   clickNext() {
     this.elements.nextPage().scrollIntoView().click({ force: true });
   }
+
   clickPrevious() {
     this.elements.prevPage().scrollIntoView().click({ force: true });
   }
@@ -137,5 +151,11 @@ export default class HomePage {
       .filter(":visible")
       .first()
       .click({ force: true });
+  }
+
+  addProductNTimes(times = 3) {
+    Cypress._.times(times, () => {
+      this.addCurrentProductToCart();
+    });
   }
 }

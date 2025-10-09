@@ -30,6 +30,7 @@ export default class Order {
   clickPurchase() {
     this.elements.purchaseBtn().click();
   }
+
   clickOk() {
     this.elements.okButton().click();
   }
@@ -37,17 +38,23 @@ export default class Order {
   getConfirmMessage() {
     return this.elements.confirmTitle();
   }
+
   getConfirmText() {
     return this.elements.confirmText();
   }
+
   getSweetAlert() {
     return this.elements.sweetAlert();
   }
+
   getModal() {
     return this.elements.modal();
   }
 
   close() {
     this.elements.closeBtn().click({ force: true });
+  }
+  expectRequiredFieldsAlert(text) {
+    cy.expectRequiredFieldsAlert(text);
   }
 }

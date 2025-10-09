@@ -12,7 +12,9 @@ describe("Purchase - one from each category", () => {
   beforeEach(() => {
     cy.ensureSession();
     cy.visit("/");
+
     home.openCart();
+
     cart.emptyCart();
     cy.visit("/");
   });
@@ -22,31 +24,27 @@ describe("Purchase - one from each category", () => {
     home.openProductAt(0);
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
-
     cy.visit("/");
     home.openPhones();
     home.openProductAt(0);
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
-
     cy.visit("/");
     home.openMonitors();
     home.openProductAt(0);
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
-
     home.openCart();
+
     cart.getItems().should("have.length.at.least", 3);
     cart.clickPlaceOrder();
 
     order.fill(orderData());
     order.clickPurchase();
-
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
     order.getConfirmText().should("contain.text", "Amount:");
     order.clickOk();
-
     order.getModal().should("not.be.visible", { timeout: 10000 });
   });
 });
