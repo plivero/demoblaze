@@ -1,16 +1,15 @@
-# Demoblaze Product Store — Cypress (UI + API)
+# Demoblaze Product Store — Cypress (UI)
 
-> End-to-end automation suite with **Cypress**, covering UI and API flows of the [Demoblaze Product Store](https://www.demoblaze.com/index.html/) platform.
+> End-to-end automation suite with **Cypress**, covering UI flows of the [Demoblaze Product Store](https://www.demoblaze.com/index.html/) platform.
 
 ---
 
 ## About
 
 This repository contains an automated test suite built with Cypress for the Demoblaze Product Store.
-It focuses on clean, maintainable UI flows and light API validations, following the Page Object Model (POM) pattern and using environment-based configuration.
+It focuses on clean, maintainable UI flows, following the Page Object Model (POM) pattern and using environment-based configuration.
 
 The suite is fast, deterministic, and easy to extend.
-It applies reusable sessions and alert commands to keep tests independent, stable, and ready for headless or CI execution.
 
 ---
 
@@ -33,7 +32,7 @@ It applies reusable sessions and alert commands to keep tests independent, stabl
 - [How to Run](#how-to-run)
 - [Environment Variables](#environment-variables)
 - [Test Strategy & Design](#test-strategy--design)
-- [UI Tests](#ui-tests)
+- [Automated Scenarios](#automated-scenarios)
 - [References](#references)
 
 ## Project Structure
@@ -64,14 +63,12 @@ demoblaze/
 
 ## Best Practices
 
-- **Clean POM:** Page Objects include only locators and direct actions (`click`, `type`, `get`, etc.).
-- **Specs stay readable:** assertions only — no logic, loops, or data handling.
-- **Reusable session:** use `cy.ensureSession()` to restore a logged-in state.
-- **Reusable alerts:**
-  - `cy.ignoreNextAlert()` to silence confirmation popups (e.g., Add to Cart);
-  - `cy.expectNextAlert('text')` to validate expected alert messages.
-- **Test independence:** each spec cleans its state (e.g., empty cart before start).
-- **Headless CI-ready:** `npx cypress run` ensures consistent, fast runs.
+- **Clean POM:** Page Objects contain only locators and simple, direct actions (`click`, `type`, `get`), without assertions or logic.
+- **Readable specs:** test files hold only test steps and assertions.
+- **Reusable session:** `cy.ensureSession()` maintains a logged-in state between specs for faster, independent runs.
+- **Unified alert handling:** alerts are handled consistently across all specs.
+- **State isolation:** each test starts from a clean state (cart emptied, page reloaded) to avoid side effects.
+- **Deterministic data:** input values are generated once per test using `faker` via `orderData()`, ensuring consistency without external dependencies.
 
 ---
 
@@ -107,7 +104,7 @@ npx cypress run
 ### Run specific spec or folder:
 
 ```bash
-npx cypress run --spec "cypress/e2e/specs/apiTests/*.cy.js"
+npx cypress run --spec "cypress/e2e/*.cy.js"
 ```
 
 ---
@@ -129,18 +126,22 @@ Example:
 
 ## Test Strategy & Design
 
-The strategy began by validating the **essential purchase flow** (login → browse → add to cart → checkout → confirmation) to ensure the core functionality was stable.  
-After that, the suite evolved to cover the **entire mapped site flow**, including all product categories (Laptops, Phones, Monitors), cart operations, modal behaviors, and alert validations.
+The testing started with the **essential laptop purchase flow** — login, product selection, add to cart, checkout, and confirmation — to ensure the core business path was fully stable.  
+Once this flow was solid and repeatable, the suite expanded to include **edge cases** and **other product categories** (Phones and Monitors), covering additional user behaviors such as pagination, cart clearing, invalid inputs, and required-field validations.
 
-The focus is on building a **complete and maintainable test suite**, with realistic coverage that reflects how users interact with the Demoblaze store.  
-Tests are **assertion-driven**, using clean Page Objects for structure and short, reusable helpers to maintain readability and consistency.
+The approach applies **equivalence and boundary reasoning** only where it adds real value, avoiding redundant checks while still validating representative cases.  
+Each new scenario was derived from actual user interactions observed during exploratory runs, focusing on how the system behaves in practice rather than ideal logic.
+
+Overall, the design emphasizes **clarity, maintainability, and realistic coverage**: assertion-driven specs, deterministic data, short Page Object actions, and helpers to keep tests consistent and easy to extend.
 
 ### Principles
 
-- **Expanded coverage:** from the essential purchase flow to additional scenarios (categories, alerts, empty cart, invalid fields).
-- **Realistic validation:** verify what the UI actually does, not what it _should_ do.
-- **Session bootstrap:** each test starts from a stable, logged-in state using a reusable session to ensure consistency and speed.
-- **Data minimalism:** tests use only essential data for inputs and validation, avoiding external dependencies or unnecessary randomness.
+- **Prioritized by critical flow:** automation started with the **essential purchase journey** — login, laptop selection, add to cart, and checkout — as the main business path.
+- **Progressive expansion:** once stable, the same structure was extended to other categories (phones, monitors), pagination behavior, and UI inconsistencies found during exploration.
+- **Realistic validation:** tests assert what the application actually displays (alerts, delays, modal behavior) rather than ideal logic.
+- **Session bootstrap:** every test starts from a stable, logged-in state using `cy.session()` to ensure speed and independence.
+- **Specs stay readable:** specs contain only steps and assertions — no logic, loops, or data handling.
+- **Data minimalism:** inputs use only what’s necessary, provided by a simple faker-based `orderData()` helper.
 
 ### Data
 
@@ -149,14 +150,14 @@ Tests are **assertion-driven**, using clean Page Objects for structure and short
 
 ### Coverage Techniques
 
-- **Exploratory-informed:** the initial manual mapping revealed unstable areas (render timing, alerts, pagination), leading to stronger DOM-based sync.
-- **Positive and light negative:** includes standard purchase flow, modal cancellations, required field alerts, and empty cart behavior.
-- **Selective EP/BVA:** applied only where input or range validation adds real value (e.g., pagination indices, price parsing, item count).
-- **Adaptive validation:** when the platform shows inconsistent or non-deterministic behavior, tests assert the **observable response** (UI behavior) rather than idealized logic.
+- **Exploratory-driven:** initial manual mapping exposed fragile areas (slow modals, alerts, pagination), leading to stronger, DOM-based synchronization.
+- **Positive and light negative:** covers normal purchases, modal cancellations, required-field alerts, and empty-cart behavior.
+- **Selective EP/BVA:** applied only where it adds functional relevance (e.g., pagination indices, price totals, item count).
+- **Adaptive validation:** when the platform behaves inconsistently, assertions target the **observable UI outcome** instead of expected logic.
 
 ---
 
-## UI Tests
+## Automated Scenarios
 
 **Location:** `cypress/e2e/`
 

@@ -50,4 +50,10 @@ export default class LoginPage {
   clickCloseX() {
     this.elements.closeX().click({ force: true });
   }
+
+  expectNextAlert(text) {
+    cy.once("window:alert", (msg) => {
+      expect(msg).to.contain(text);
+    });
+  }
 }

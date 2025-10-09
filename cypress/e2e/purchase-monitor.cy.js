@@ -21,26 +21,21 @@ describe("Purchase - Monitor", () => {
     home
       .getWelcomeUser()
       .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
-
     home.openMonitors();
     home.openProductAt(0);
-
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
-
     home.openCart();
+
     cart.clickPlaceOrder();
 
     order.fill(orderData());
     order.clickPurchase();
-
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
     order.getConfirmText().should("contain.text", "Amount:");
-
     order.clickOk();
     order.getSweetAlert().should("not.be.visible", { timeout: 10000 });
-
     order.close();
     order.getModal().should("not.be.visible", { timeout: 10000 });
 
@@ -51,37 +46,30 @@ describe("Purchase - Monitor", () => {
   it("adds one monitor and deletes it", () => {
     home.openMonitors();
     home.openProductAt(0);
-
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
-
     home.openCart();
+
     cart.getItems().should("have.length.at.least", 1);
     cart.deleteFirstItem();
     cart.getItems().should("have.length", 0);
-    cy.wait(700);
   });
 
   it("buys three units of the same monitor", () => {
     home.openMonitors();
     home.getProductByName("Apple monitor 24").should("be.visible");
     home.openProductAt(0);
-
     home.getAddToCartButton().should("be.visible");
-    Cypress._.times(3, () => {
-      home.addCurrentProductToCart();
-    });
-
+    home.addProductNTimes();
     home.openCart();
+
     cart.clickPlaceOrder();
 
     order.fill(orderData());
     order.clickPurchase();
-
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
     order.getConfirmText().should("contain.text", "Amount:");
-
     order.clickOk();
     order.getSweetAlert().should("not.be.visible", { timeout: 10000 });
     order.close();
@@ -93,18 +81,16 @@ describe("Purchase - Monitor", () => {
 
   it("adds all monitors (first page) and completes purchase", () => {
     home.addMonitorsByIndexes([0, 1]);
-
     home.openCart();
+
     cart.getItems().should("have.length", 2);
     cart.clickPlaceOrder();
 
     order.fill(orderData());
     order.clickPurchase();
-
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
     order.getConfirmText().should("contain.text", "Amount:");
-
     order.clickOk();
     order.close();
     order.getModal().should("not.be.visible", { timeout: 10000 });
@@ -115,29 +101,27 @@ describe("Purchase - Monitor", () => {
       .getWelcomeUser()
       .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
     home.openCart();
+
     cart.getItems().should("have.length", 0);
-
     cart.clickPlaceOrder();
-    order.getModal().should("be.visible");
 
+    order.getModal().should("be.visible");
     order.fill(orderData());
     order.clickPurchase();
-
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.clickOk();
-
     order.getModal().should("not.be.visible");
   });
 
   it("shows required-fields alert when purchasing with empty form", () => {
     home.openCart();
+
     cart.getItems().should("have.length", 0);
-
     cart.clickPlaceOrder();
-    order.getModal().should("be.visible");
 
+    order.getModal().should("be.visible");
     order.clickPurchase();
-    cy.expectNextAlert("Please fill out Name and Creditcard.");
+    order.expectRequiredFieldsAlert("Please fill out Name and Creditcard.");
     order.getModal().should("be.visible");
   });
 });
