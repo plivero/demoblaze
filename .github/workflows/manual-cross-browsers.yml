@@ -39,4 +39,4 @@ jobs:
           npx cypress run \
             --browser ${{ matrix.browser }} \
             --headless \
-            --spec "cypress/e2e/**/*.cy.js"
+            --spec "cypress/e2e/*.cy.js"
