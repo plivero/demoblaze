@@ -13,6 +13,7 @@ describe("Purchase - Laptop", () => {
     cy.ensureSession();
     cy.visit("/");
     home.openCart();
+
     cart.emptyCart();
     cy.visit("/");
   });
@@ -21,15 +22,21 @@ describe("Purchase - Laptop", () => {
     home
       .getWelcomeUser()
       .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
-    home.openLaptops();
+    home.openCategory("Laptops");
     home.openProductAt(0);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
+    home
+      .getAddToCartButton()
+      .should("be.visible")
+      .scrollIntoView()
+      .click({ force: true });
+    cy.getNextAlertText().then((msg) => {
+      expect(msg).to.contain("Product added");
+    });
     home.openCart();
 
     cart.clickPlaceOrder();
 
-    order.fill(orderData());
+    order.fill();
     order.clickPurchase();
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
@@ -44,19 +51,20 @@ describe("Purchase - Laptop", () => {
   });
 
   it("adds one product and deletes it", () => {
-    home.openLaptops();
+    home.openCategory("Laptops");
     home.openProductAt(0);
+    home.getDetailName().should("be.visible");
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
     home.openCart();
 
     cart.getItems().should("have.length.at.least", 1);
-    cart.deleteFirstItem();
+    cart.removeFirstItem();
     cart.getItems().should("have.length", 0);
   });
 
   it("buys three units of the same laptop", () => {
-    home.openLaptops();
+    home.openCategory("Laptops");
     home.getProductByName("Sony vaio i5").should("be.visible");
     home.openProductAt(0);
     home.getAddToCartButton().should("be.visible");
@@ -65,7 +73,7 @@ describe("Purchase - Laptop", () => {
 
     cart.clickPlaceOrder();
 
-    order.fill(orderData());
+    order.fill();
     order.clickPurchase();
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
@@ -80,13 +88,13 @@ describe("Purchase - Laptop", () => {
   });
 
   it("adds all 6 laptops (first page) and completes purchase", () => {
-    home.addLaptopsByIndexes([0, 1, 2, 3, 4, 5]);
+    home.addProductsByIndexes("Laptops", [0, 1, 2, 3, 4, 5]);
     home.openCart();
 
     cart.getItems().should("have.length", 6);
     cart.clickPlaceOrder();
 
-    order.fill(orderData());
+    order.fill();
     order.clickPurchase();
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
@@ -106,7 +114,7 @@ describe("Purchase - Laptop", () => {
     cart.clickPlaceOrder();
 
     order.getModal().should("be.visible");
-    order.fill(orderData());
+    order.fill();
     order.clickPurchase();
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.clickOk();

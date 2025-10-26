@@ -1,5 +1,4 @@
 // cypress/support/pages/loginPage.js
-
 /// <reference types="cypress" />
 
 export default class LoginPage {
@@ -36,7 +35,6 @@ export default class LoginPage {
 
   submitLogin() {
     this.elements.submitButton().click({ force: true });
-    this.elements.modal().should("not.be.visible");
   }
 
   clickSubmit() {
@@ -51,9 +49,7 @@ export default class LoginPage {
     this.elements.closeX().click({ force: true });
   }
 
-  expectNextAlert(text) {
-    cy.once("window:alert", (msg) => {
-      expect(msg).to.contain(text);
-    });
+  getNextAlertText() {
+    return cy.getNextAlertText();
   }
 }

@@ -13,6 +13,7 @@ describe("Purchase - Phone", () => {
     cy.ensureSession();
     cy.visit("/");
     home.openCart();
+
     cart.emptyCart();
     cy.visit("/");
   });
@@ -21,16 +22,21 @@ describe("Purchase - Phone", () => {
     home
       .getWelcomeUser()
       .should("contain.text", `Welcome ${Cypress.env("USER_NAME")}`);
-
-    home.openPhones();
+    home.openCategory("Phones");
     home.openProductAt(0);
-    home.getAddToCartButton().should("be.visible");
-    home.clickAddToCart();
+    home
+      .getAddToCartButton()
+      .should("be.visible")
+      .scrollIntoView()
+      .click({ force: true });
+    cy.getNextAlertText().then((msg) => {
+      expect(msg).to.contain("Product added");
+    });
     home.openCart();
 
     cart.clickPlaceOrder();
 
-    order.fill(orderData());
+    order.fill();
     order.clickPurchase();
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
@@ -45,28 +51,29 @@ describe("Purchase - Phone", () => {
   });
 
   it("adds one phone and deletes it", () => {
-    home.openPhones();
+    home.openCategory("Phones");
     home.openProductAt(0);
+    home.getDetailName().should("be.visible");
     home.getAddToCartButton().should("be.visible");
     home.clickAddToCart();
     home.openCart();
 
     cart.getItems().should("have.length.at.least", 1);
-    cart.deleteFirstItem();
+    cart.removeFirstItem();
     cart.getItems().should("have.length", 0);
   });
 
   it("buys three units of the same phone", () => {
-    home.openPhones();
+    home.openCategory("Phones");
     home.getProductByName("Samsung galaxy s6").should("be.visible");
     home.openProductAt(0);
     home.getAddToCartButton().should("be.visible");
-    home.addProductNTimes();
+    home.addProductNTimes(3);
     home.openCart();
 
     cart.clickPlaceOrder();
 
-    order.fill(orderData());
+    order.fill();
     order.clickPurchase();
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
@@ -81,13 +88,13 @@ describe("Purchase - Phone", () => {
   });
 
   it("adds all phones (first page) and completes purchase", () => {
-    home.addPhonesByIndexes([0, 1, 2, 3, 4, 5, 6]);
+    home.addProductsByIndexes("Laptops", [0, 1, 2, 3, 4, 5]);
     home.openCart();
 
     cart.getItems().should("have.length", 7);
     cart.clickPlaceOrder();
 
-    order.fill(orderData());
+    order.fill();
     order.clickPurchase();
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.getConfirmText().should("contain.text", "Id:");
@@ -107,7 +114,7 @@ describe("Purchase - Phone", () => {
     cart.clickPlaceOrder();
 
     order.getModal().should("be.visible");
-    order.fill(orderData());
+    order.fill();
     order.clickPurchase();
     order.getConfirmMessage().should("contain.text", "Thank you");
     order.clickOk();
