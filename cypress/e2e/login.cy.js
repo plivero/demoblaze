@@ -7,6 +7,7 @@ const login = new Login();
 
 describe("Login", () => {
   beforeEach(() => {
+    Cypress.session.clearAllSavedSessions();
     cy.visit("/");
   });
 
@@ -44,12 +45,17 @@ describe("Login", () => {
     cy.visit("/");
     login.open();
     login.getModal().should("be.visible");
+
     login.fillLogin(
       "User-Not-Valid_fJ93jKi4fs347ik",
       "Password-Not-Valid_fJ93jKi4fs347ik"
     );
+
     login.clickSubmit();
-    login.expectNextAlert("User does not exist");
+
+    cy.getNextAlertText().then((msg) => {
+      expect(msg).to.contain("User does not exist");
+    });
 
     home.getLogoutButton().should("not.be.visible");
     home.getLoginButton().should("be.visible");

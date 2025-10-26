@@ -54,20 +54,26 @@ export default class CartPage {
     this.elements.deleteLinks().first().click({ force: true });
   }
 
-  deleteFirstItem() {
-    this.removeFirstItem();
-  }
-
   emptyCart() {
-    this.elements
-      .container()
-      .should("exist")
-      .then(($cart) => {
-        const $deletes = $cart.find(deleteSelector);
-        if ($deletes.length) {
-          cy.wrap($deletes).click({ multiple: true, force: true });
-        }
-      });
-    this.getItems().should("have.length", 0);
+    const delSel = "#tbodyid > tr:nth-child(1) > td:nth-child(4) > a";
+
+    cy.wait(4000);
+
+    cy.get("body").then(($body) => {
+      if ($body.find("#tbodyid").length === 0) return;
+
+      const loop = () => {
+        cy.get("#tbodyid").then(($tbody) => {
+          const hasItem = $tbody.find("tr").length > 0;
+          if (!hasItem) return;
+
+          cy.get(delSel).first().click({ force: true });
+          cy.wait(4000);
+          loop();
+        });
+      };
+
+      loop();
+    });
   }
 }
