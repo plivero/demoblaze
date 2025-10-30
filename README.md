@@ -31,7 +31,13 @@ The suite is fast, deterministic, and easy to extend.
 - [Best Practices](#best-practices)
 - [How to Run](#how-to-run)
 - [Environment Variables](#environment-variables)
-- [Test Strategy & Design](#test-strategy--design)
+- [Test Types](#test-types)
+- [Test Design Techniques](#test-design-techniques)
+- [State Transition Table](#state-transition-table)
+- [Decision Table Summary](#decision-table-summary)
+- [Coverage & Traceability](#coverage--traceability)
+- [Entry / Exit Criteria](#entry--exit-criteria)
+- [Locator Strategy](#locator-strategy)
 - [Automated Scenarios](#automated-scenarios)
 - [References](#references)
 
@@ -63,18 +69,23 @@ demoblaze/
 
 ## Best Practices
 
-This suite was built under a **compressed timeline** with a clear priority: deliver a reliable automation baseline for the **essential purchase flow** (login → product(laptop) selection → cart → checkout → confirmation). To control risk and keep momentum, work started by stabilizing this end-to-end path so it ran deterministically both locally and in CI (headless, cross-browser), with session bootstrap and state isolation to avoid cross-test bleed.
+This suite was developed under a **short and constrained timeline**, requiring clear prioritization to ensure a stable and reliable automation baseline. The first phase focused exclusively on validating the **essential purchase flow** — the path that ensures a customer can successfully complete a transaction.
 
-Once the baseline was consistently green, coverage expanded **incrementally** to additional categories (Phones, Monitors) and UI behaviors that affect user outcomes, such as **pagination, required-field validations, alerts, and cart operations**.
+Once this flow (login → laptop selection → cart → checkout → confirmation) was fully stable and deterministic, the scope was expanded to include other categories (**Phones**, **Monitors**) and additional user-impacting behaviors such as **pagination**, **alerts**, **required-field validations**, and **cart operations**.
 
-- **Essential flow first**: stabilize the purchase journey end-to-end before adding breadth.
-- **Independent tests**: each spec resets state (clean cart, home reload) and restores a logged-in session via `cy.session()` to remove cross-test coupling.
-- **Stable selectors**: prefer text-based or semantic locators over brittle attributes.
-- **Clean POM**: page objects expose only locators and simple actions; **assertions live in the specs**.
-- **Deterministic data**: keep inputs minimal (simple helper for order data) to reduce flakiness.
-- **Unified alert handling**: custom commands to ignore/expect the next `window.alert`.
-- **Static analysis as a guardrail**: ESLint enabled and **blocks `it.only` / `describe.only`**.
-- **CI pipeline**: GitHub Actions cross-browser (Chrome, Edge, Firefox) with repo secrets for credentials.
+Although Cypress officially recommends using **`data-*` attributes** for selectors — and this remains the best practice for maintainable test suites — the target application (Demoblaze) does **not expose reliable test-friendly selectors**. Due to limitations in the site’s markup and occasional rendering issues, **text-based and semantic selectors were used as a fallback** strategy, striking a balance between **stability and feasibility**.
+
+---
+
+- **Essential flow first**: prioritize and stabilize the critical end-to-end purchase before scaling coverage.
+- **Independent specs**: each test starts from a clean state (cart cleared, fresh session) using `cy.session()` to isolate contexts and avoid cross-test dependency.
+- **Stable selectors**: fallback to robust text-based or semantic selectors — always aiming for resilience and readability.
+- **Page Objects**:
+  - Only expose locators and direct actions
+  - **No assertions, no logic inside PO files**
+  - All assertions live in `.spec.js`
+- **Deterministic data**: minimal, predictable test data (via helper functions like `orderData()`) reduces flakiness and improves repeatability.
+- **Unified alert handling**: centralized commands to handle and assert `window.alert` messages consistently.
 
 ---
 
@@ -130,100 +141,108 @@ Example:
 
 ---
 
-## Test Design
+## Test Types
 
-### Test types
-
-- **Functional testing**: validate specified behavior across the purchase workflow (authentication, catalog navigation, product-detail presentation and pricing, cart operations, and checkout confirmation).
-- **Change-related testing**
-
-  - **Confirmation testing (re-testing)**: re-run previously failing cases after fixes (e.g., modal/alert timing issues).
-  - **Regression testing**: re-run the essential purchase flow and price/cart-deletion scenarios after code/config/CI changes.
-
-- **Equivalence Partitioning (EP)**  
-  Applied to inputs and UI states using representative classes:
-
-  - **Order modal (required fields)**: partitions = {all required present} vs {missing _name_} vs {missing _card_} vs {multiple missing}. Expected outcomes = {confirmation} vs {browser alert}.
-  - **Catalog by category**: partitions = {Phones} / {Laptops} / {Monitors}. Example: assert product presence per category (e.g., “Samsung galaxy s6” only under **Phones**), and absence outside the active partition.
-
-- **Boundary Value Analysis (BVA)**  
-  Used where off-by-one risks exist:
-
-  - **Pagination**: boundaries = first page ↔ next page ↔ last page. Example: verify reference items across **Next/Previous** (e.g., “Samsung galaxy s7” visible only after `Next`, returns after `Previous`).
-  - **Cart item count**: 0 → 1 → N. Example: assert transitions in **row count** and **total** when adding the first item (0→1) and when emptying back to 0.
-
-- **Decision Table Testing**  
-  Modeled business rules as action/condition → outcome:
-
-  - **Order modal validation**  
-    | name | card | month | year | Expected |
-    |------|------|-------|------|----------|
-    | ✓ | ✓ | ✓ | ✓ | Purchase confirmation |
-    | ✗ | ✓ | ✓ | ✓ | Alert (required) |
-    | ✓ | ✗ | ✓ | ✓ | Alert (required) |
-    | ✓/✗ | ✓/✗ | ✗ | ✓/✗ | Alert (required) |
-    | ✓/✗ | ✓/✗ | ✓ | ✗ | Alert (required) |
-  - **Cart operations**  
-    | Current state | Action | Expected |
-    |---------------|------------|----------|
-    | 0 items | Add | 1 item; total = price |
-    | 1 item | Add same | 2 items; total += price |
-    | N items | Remove one | N-1 items; total decrements |
-    | N items | Empty cart | 0 items; total = 0 |
-
-- **State Transition Testing**  
-  Focused on observable UI states and transitions:
-
-  - **Authentication state**: _logged-in_ → purchase flow available; logout returns to _logged-out_ (login button visible).
-  - **Order modal**: _closed_ → _open_ (Place Order) → _(confirmed | canceled)_ with distinct outcomes (confirmation vs modal dismissed).
-
-- **Experience-based techniques** (exploratory, error guessing, checklist)  
-  Grounded by hands-on observation:
-  - **Exploratory**: identified fragile areas (modal timing, alert sequencing, pagination visibility changes) that informed assertions and waits.
-  - **Error guessing**: targeted cart-emptying race conditions (ensuring row count truly decreases after Delete before proceeding).
-  - **Checklist-based**: per screen, verified presence of primary UI elements (category list, product title, price on detail, cart rows, order fields) to support quick sanity coverage.
-
-### Coverage & traceability
-
-- **Requirements-based coverage** with **traceability** from requirements → test conditions → test cases.
-- Coverage monitored via conditions/rules (e.g., decision-table rules, state transitions).
-
-### Entry / exit criteria
-
-- **Entry**: environment available, test data/accounts ready, prerequisite defects closed.
-- **Exit**: planned test conditions executed, critical defects resolved or deferred by agreement, and results reviewed/approved.
+- **Functional testing**: validate the purchase workflow: login → catalog → product → cart → checkout.
+- **Regression testing**: ensure price/cart behavior is stable after code/config changes.
+- **Confirmation testing**: re-run previously failing cases after fix (e.g., modal alert timing).
 
 ---
 
-## Locator Strategy & Preferences
+## Test Design Techniques
 
-### Preferred order (most → least stable)
+### Equivalence Partitioning (EP)
 
-1. **Visible text with `cy.contains()`**
+- **Order modal (required fields)**:
 
-   - Rationale: resilient to markup changes and indices; mirrors how users interact.
+  - {all fields filled} → confirmation modal
+  - {missing name}, {missing card}, {multiple missing} → browser alert
+
+- **Category filtering**:
+  - Partitions: Phones / Laptops / Monitors
+  - Example: “Samsung galaxy s6” only appears under Phones
+
+### Boundary Value Analysis (BVA)
+
+- **Pagination**:
+
+  - Boundaries: first ↔ next ↔ last page
+  - Ex: item “Samsung galaxy s7” only appears after `Next`, disappears after `Previous`
+
+- **Cart item count**:
+  - Boundaries: 0 → 1 → N
+  - Ex: validate row increase when adding first item, and reset when emptying cart
+
+### Experience-based Testing
+
+- **Exploratory**: identified flakiness in modal timing, pagination flickers, alert delays
+- **Error guessing**: race condition when deleting items before confirmation
+- **Checklist-based**: presence of title, price, category list, rows, fields per screen
+
+---
+
+## State Transition Table
+
+| State              | Action     | Result                          |
+| ------------------ | ---------- | ------------------------------- |
+| Logged out         | Login      | Logged in, purchase flow active |
+| Logged in          | Logout     | Returns to login state          |
+| Cart empty         | Add item   | Row added, total updated        |
+| Order modal closed | Open modal | Modal appears                   |
+| Modal open         | Purchase   | Modal closes, confirmation seen |
+| Modal open         | Close / X  | Modal closes, no confirmation   |
+
+---
+
+## Decision Table Summary
+
+| name | card | month | year | Expected result       |
+| ---- | ---- | ----- | ---- | --------------------- |
+| ✓    | ✓    | ✓     | ✓    | Purchase confirmation |
+| ✗    | ✓    | ✓     | ✓    | Alert: name required  |
+| ✓    | ✗    | ✓     | ✓    | Alert: card required  |
+| ✓/✗  | ✓/✗  | ✗     | ✓/✗  | Purchase confirmation |
+| ✓/✗  | ✓/✗  | ✓     | ✗    | Purchase confirmation |
+
+---
+
+## Coverage & Traceability
+
+- Each test case traces back to a defined business rule or behavior
+- Coverage tracked by:
+  - Category filters
+  - Cart totals
+  - Modal validations
+  - Transition states
+
+---
+
+## Entry / Exit Criteria
+
+- **Entry**: site available, login OK, cart empty
+- **Exit**: critical paths validated, no blocking bug, CI passed
+
+---
+
+## Locator Strategy
+
+### Preferred order:
+
+1. **Text-based (`cy.contains`)**
+
+   - Used due to absence of `data-*` in Demoblaze
    - Examples:
-     - Categories: `cy.contains('a.list-group-item', 'Phones')` / `'Laptops'` / `'Monitors'`
-     - Product by name: `cy.contains('a.hrefch', 'Sony vaio i5')`
+     - `cy.contains('a.list-group-item', 'Laptops')`
+     - `cy.contains('a.hrefch', 'Sony vaio i5')`
 
-2. **Semantic/role or stable attributes (when available)**
+2. **Stable IDs / classes**
 
-   - Rationale: aligns with accessibility/intent; less brittle than position.
-   - Demoblaze often lacks ARIA roles; when present, prefer them.
+   - Examples: `#login2`, `#logout2`, `#cartur`, `#tbodyid tr`
 
-3. **Stable IDs/classes scoped to a context**
+3. **Attribute-based selectors**
+   - Ex: `a[onclick*="deleteItem"]`
 
-   - Rationale: simple and fast, but avoid over-generic scopes reused in multiple screens.
-   - Examples:
-     - Cart rows: `#tbodyid tr` (only after navigating to `/cart.html`)
-     - Add to cart (detail): `#tbodyid a.btn-success`
-     - Login/welcome: `#login2`, `#logout2`, `#nameofuser`, `#cartur`
-
-4. **Attribute intent selectors** (when text is not available)
-   - Rationale: captures behavior without relying on layout.
-   - Example (cart delete): `#tbodyid a[onclick*="deleteItem"]`
-
-> **Avoid:** position-based selectors (e.g., `:nth-child(1)`), brittle CSS chains tied to layout.
+> **Avoid**: layout-based selectors (`:nth-child`, `.row > div > div`), fragile and break easily.
 
 ---
 
