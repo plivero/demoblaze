@@ -9,8 +9,6 @@
 This repository contains an automated test suite built with Cypress for the Demoblaze Product Store.
 It focuses on clean, maintainable UI flows, following the Page Object Model (POM) pattern and using environment-based configuration.
 
-The suite is fast, deterministic, and easy to extend.
-
 ---
 
 # Tech Stack & Versions
@@ -69,23 +67,35 @@ demoblaze/
 
 ## Best Practices
 
-This suite was developed under a **short and constrained timeline**, requiring clear prioritization to ensure a stable and reliable automation baseline. The first phase focused exclusively on validating the **essential purchase flow** — the path that ensures a customer can successfully complete a transaction.
+This suite follows core automation principles to ensure reliable, maintainable, and deterministic UI tests using Cypress. It is designed around modular code, clean selectors, and clear separation between logic and assertions.
 
-Once this flow (login → laptop selection → cart → checkout → confirmation) was fully stable and deterministic, the scope was expanded to include other categories (**Phones**, **Monitors**) and additional user-impacting behaviors such as **pagination**, **alerts**, **required-field validations**, and **cart operations**.
+### Page Objects
 
-Although Cypress officially recommends using **`data-*` attributes** for selectors — and this remains the best practice for maintainable test suites — the target application (Demoblaze) does **not expose reliable test-friendly selectors**. Due to limitations in the site’s markup and occasional rendering issues, **text-based and semantic selectors were used as a fallback** strategy, striking a balance between **stability and feasibility**.
+- Located in `/support/pages/`
+- Expose only locators and simple actions (e.g., `.clickAddToCart()`)
+- **No logic or assertions** inside PO files
+- All validations must live in the `.spec.js` files
 
----
+### Selector Strategy
 
-- **Essential flow first**: prioritize and stabilize the critical end-to-end purchase before scaling coverage.
-- **Independent specs**: each test starts from a clean state (cart cleared, fresh session) using `cy.session()` to isolate contexts and avoid cross-test dependency.
-- **Stable selectors**: fallback to robust text-based or semantic selectors — always aiming for resilience and readability.
-- **Page Objects**:
-  - Only expose locators and direct actions
-  - **No assertions, no logic inside PO files**
-  - All assertions live in `.spec.js`
-- **Deterministic data**: minimal, predictable test data (via helper functions like `orderData()`) reduces flakiness and improves repeatability.
-- **Unified alert handling**: centralized commands to handle and assert `window.alert` messages consistently.
+- **Preferred**: `data-*` attributes — Cypress-recommended for stability
+- **Fallback**: text-based or semantic selectors were used **only when the target app (Demoblaze)** did not provide stable IDs or data-\* attributes
+- **Avoid**: fragile or layout-dependent selectors (`:nth-child`, chained `.div > .div`)
+
+### Session control
+
+- Use of `cy.session()` for clean session state between specs
+- Each spec starts with cart cleared and user logged in
+
+### Minimal helper data
+
+- Uses static factory-like helpers (`orderData()`) to isolate test inputs
+- Employs `@faker-js/faker` to generate realistic values (e.g., name, card), keeping inputs varied but deterministic
+- Reduces flakiness and encourages repeatability
+
+### CI enforcement
+
+- Tests run headless on GitHub Actions matrix (Chrome, Edge, Firefox)
 
 ---
 
@@ -141,140 +151,103 @@ Example:
 
 ---
 
-## Test Types
+## Test Design Strategy
 
-- **Functional testing**: validate the purchase workflow: login → catalog → product → cart → checkout.
-- **Regression testing**: ensure price/cart behavior is stable after code/config changes.
-- **Confirmation testing**: re-run previously failing cases after fix (e.g., modal alert timing).
+This section describes the structured testing approach used to validate Demoblaze's core behaviors, starting from a rapid exploratory phase to a stable automation suite.
 
----
+### Phase 0: Initial Exploration (Manual)
 
-## Test Design Techniques
+Before automating, we conducted a short exploratory session to understand the application's structure, UI consistency, alert behavior, and known limitations. This allowed us to:
 
-### Equivalence Partitioning (EP)
+- Identify fragile locators and modal alert timing
+- Confirm essential workflows (e.g., product selection, purchase, cart behavior)
+- Understand element reuse across pages (e.g., `#tbodyid` in catalog, detail, cart)
 
-- **Order modal (required fields)**:
+These insights helped define the minimal essential flow and pick robust selectors.
 
-  - {all fields filled} → confirmation modal
-  - {missing name}, {missing card}, {multiple missing} → browser alert
+### Phase 1: Essential Flow Automation
 
-- **Category filtering**:
-  - Partitions: Phones / Laptops / Monitors
-  - Example: “Samsung galaxy s6” only appears under Phones
+The first automation delivery focused exclusively on the **critical purchase path**:
 
-### Boundary Value Analysis (BVA)
+**Login → Laptop selection → Cart → Checkout → Purchase confirmation**
 
-- **Pagination**:
+This path was prioritized due to its impact on user experience and business value. It was validated across multiple browsers and iterations to ensure:
 
-  - Boundaries: first ↔ next ↔ last page
-  - Ex: item “Samsung galaxy s7” only appears after `Next`, disappears after `Previous`
+- Consistent state transitions (login/logout, cart reset, modal timing)
+- Price propagation from catalog → detail → cart
+- Successful order modal submission with valid input
 
-- **Cart item count**:
-  - Boundaries: 0 → 1 → N
-  - Ex: validate row increase when adding first item, and reset when emptying cart
+Once stable, we expanded the test scope.
 
-### Experience-based Testing
+### Phase 2: Extended Coverage
 
-- **Exploratory**: identified flakiness in modal timing, pagination flickers, alert delays
-- **Error guessing**: race condition when deleting items before confirmation
-- **Checklist-based**: presence of title, price, category list, rows, fields per screen
+After the essential journey was locked, the suite grew to cover:
 
----
+- Product category filtering: Phones, Laptops, Monitors
+- Cart behaviors: add/remove, totals, empty state
+- Pagination transitions (next, previous, visibility)
+- Field validations and alert handling on the order modal
 
-## State Transition Table
-
-| State              | Action     | Result                          |
-| ------------------ | ---------- | ------------------------------- |
-| Logged out         | Login      | Logged in, purchase flow active |
-| Logged in          | Logout     | Returns to login state          |
-| Cart empty         | Add item   | Row added, total updated        |
-| Order modal closed | Open modal | Modal appears                   |
-| Modal open         | Purchase   | Modal closes, confirmation seen |
-| Modal open         | Close / X  | Modal closes, no confirmation   |
+This broader coverage ensured resilience against future regressions.
 
 ---
 
-## Decision Table Summary
+### Test Design Techniques
 
-| name | card | month | year | Expected result       |
-| ---- | ---- | ----- | ---- | --------------------- |
-| ✓    | ✓    | ✓     | ✓    | Purchase confirmation |
-| ✗    | ✓    | ✓     | ✓    | Alert: name required  |
-| ✓    | ✗    | ✓     | ✓    | Alert: card required  |
-| ✓/✗  | ✓/✗  | ✗     | ✓/✗  | Purchase confirmation |
-| ✓/✗  | ✓/✗  | ✓     | ✗    | Purchase confirmation |
+#### Equivalence Partitioning (EP)
 
----
+- **Order Modal:**
+  - All required fields filled → purchase confirmed
+  - Missing name or card → browser alert triggered
+- **Category filtering:**
+  - Phones / Laptops / Monitors as partitions
+  - Example: “Samsung galaxy s6” should only appear under Phones
 
-## Coverage & Traceability
+#### Experience-based Testing
 
-- Each test case traces back to a defined business rule or behavior
-- Coverage tracked by:
-  - Category filters
-  - Cart totals
-  - Modal validations
-  - Transition states
-
----
-
-## Entry / Exit Criteria
-
-- **Entry**: site available, login OK, cart empty
-- **Exit**: critical paths validated, no blocking bug, CI passed
+- **Exploratory**: discovered flaky behavior in:
+  - Native alerts appearing inconsistently
+  - Modal rendering timing vs alert timing
+  - Pagination causing temporary disappearance of items
+- **Checklist-based**:
+  - Each screen must show: product name, price, category list, navigation links
 
 ---
 
 ## Locator Strategy
 
-### Preferred order:
+Selectors were carefully chosen based on the limitations of the Demoblaze site, which does **not provide consistent `data-*` attributes** nor well-structured IDs. The strategy followed these principles:
 
-1. **Text-based (`cy.contains`)**
+1. **Prefer stable, test-friendly selectors**:
 
-   - Used due to absence of `data-*` in Demoblaze
-   - Examples:
+   - If available, always use unique and consistent **`data-*` attributes**, in line with Cypress recommendations.
+   - Example: `cy.get('[data-testid="cart-item"]')` _(not available in Demoblaze)_
+
+2. **Fallback to text-based or semantic selectors**:
+
+   - Used **only when data-\* or IDs were not viable**.
+   - Example:
      - `cy.contains('a.list-group-item', 'Laptops')`
      - `cy.contains('a.hrefch', 'Sony vaio i5')`
 
-2. **Stable IDs / classes**
+3. **Use stable IDs or classes when available**:
 
-   - Examples: `#login2`, `#logout2`, `#cartur`, `#tbodyid tr`
+   - Ex: `#login2`, `#logout2`, `#cartur`, `#tbodyid tr`
 
-3. **Attribute-based selectors**
-   - Ex: `a[onclick*="deleteItem"]`
+4. **Attribute-based selectors for actions**:
 
-> **Avoid**: layout-based selectors (`:nth-child`, `.row > div > div`), fragile and break easily.
+   - Used when elements had no readable text or useful ID.
+   - Ex: `a[onclick*="deleteItem"]` for delete buttons
 
----
-
-### Demoblaze-specific notes
-
-- **`#tbodyid` is reused** across multiple pages (catalog grid, product detail, cart).  
-  **Always pair with context** (e.g., ensure you are on `/cart.html` before using `#tbodyid tr`, or assert `a.hrefch:visible` when on catalog).
-
-- Category **"All" is not a link** in current UI. Treat **`cy.visit('/')`** as the “All” state and assert the product grid via `a.hrefch:visible`.
-
-- **Buttons are often `<a>` elements**:
-
-  - Add to cart: `#tbodyid a.btn-success`
-  - Delete from cart: `#tbodyid a[onclick*="deleteItem"]`
-
-- **Pagination**:
-
-  - Next/Previous are stable: `#next2`, `#prev2`.
-  - After clicking, **re-query visible items**:  
-    `cy.get('a.hrefch:visible', { timeout: 10000 }).should('exist')`.
-
-- **Alerts** (after Add to cart) are native browser alerts; handle via:  
-  `cy.once('window:alert', () => {});` (or assert the text when needed).
+5. **Avoid layout-dependent or brittle selectors**:
+   - Such as `:nth-child`, `div > div > div`, etc.
 
 ---
 
-### Why these choices
+> It was chosen due to **lack of test-specific attributes** in the target application, and only when safer options were unavailable.
+> Always prefer **predictable, stable selectors** first. Text-based approaches were a **last resort** dictated by Demoblaze’s limitations.
 
-- Text-first selectors survive CSS/layout shifts and match user intent.
-- Context + stable id/class reduces ambiguity (same id reused across screens).
-- Attribute intent captures behavior that lacks good text (e.g., Delete links).
-- Avoiding `:nth-child` prevents flakiness when DOM structure changes or items re-order.
+---
 
 ## Automated Scenarios
 
